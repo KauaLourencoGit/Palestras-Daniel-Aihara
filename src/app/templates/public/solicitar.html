@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+
+{% block title %}Solicitar Palestra — Daniel Takeo Aihara{% endblock %}
+
+{% block content %}
+<div class="bg-slate-900 text-white py-10 sm:py-14 border-b border-slate-800">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center sm:text-left">
+        <span class="text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+            Formulário de Atendimento
+        </span>
+        <h1 class="text-2xl sm:text-4xl font-extrabold mt-3">Solicitar Palestra ou Workshop</h1>
+        <p class="text-slate-300 text-sm sm:text-base mt-2 max-w-2xl">
+            Preencha os dados do seu evento abaixo. Você receberá um código de protocolo para acompanhar a solicitação diretamente com o Daniel.
+        </p>
+    </div>
+</div>
+
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+
+    <!-- Mensagem de erro geral do servidor se houver -->
+    {% if erro_geral %}
+    <div class="mb-8 p-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm flex items-start gap-3">
+        <svg class="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+        <div>
+            <strong class="font-bold">Atenção ao preencher o formulário:</strong>
+            <p>{{ erro_geral }}</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <form method="POST" action="/solicitar" class="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 sm:p-10 space-y-8" novalidate id="formSolicitacao">
+        
+        <!-- Campo Honeypot / Armadilha Anti-Spam (RN-16) oculto para humanos -->
+        <div class="hidden" aria-hidden="true">
+            <label for="website">Website (deixe em branco):</label>
+            <input type="text" name="website" id="website" tabindex="-1" autocomplete="off" value="">
+        </div>
+
+        <!-- Seção 1: Organização e Contato -->
+        <div>
+            <div class="border-b border-slate-200 pb-3 mb-6">
+                <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                    <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center justify-center">1</span>
+                    Dados da Organização e Responsável
+                </h2>
+                <p class="text-xs text-slate-500 mt-1">Identificação da empresa, escola ou entidade contratante.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <!-- Organização -->
+                <div class="sm:col-span-2">
+                    <label for="organizacao" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                        Nome da Empresa / Escola / Instituição <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="organizacao" name="organizacao" required minlength="2" maxlength="120"
+                           value="{{ form.organizacao|default('', true) }}"
+                           placeholder="Ex.: ACME Corporation, Colégio Objetivo, Prefeitura Municipal"
+                           class="w-full px-4 py-2.5 rounded-xl border {% if erros.organizacao %}border-red-500 bg-red-50/30{% else %}border-slate-300{% endif %} focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition-colors">
+                    {% if erros.organizacao %}
+                    <p class="text-xs text-red-600 mt-1 font-medium">{{ erros.organizacao }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Nome do Contato -->
+                <div>
+                    <label for="nome_contato" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                        Nome do Responsável / Contato <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="nome_contato" name="nome_contato" required minlength="2" maxlength="100"
+                           value="{{ form.nome_contato|default('', true) }}"
+                           placeholder="Ex.: Mariana Oliveira"
+                           class="w-full px-4 py-2.5 rounded-xl border {% if erros.nome_contato %}border-red-500 bg-red-50/30{% else %}border-slate-300{% endif %} focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition-colors">
+                    {% if erros.nome_contato %}
+                    <p class="text-xs text-red-600 mt-1 font-medium">{{ erros.nome_contato }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- E-mail -->
+                <div>
+                    <label for="email" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                        E-mail Profissional para Retorno <span class="text-red-500">*</span>
+                    </label>
+                    <input type="email" id="email" name="email" required
+                           value="{{ form.email|default('', true) }}"
+                           placeholder="mariana@empresa.com.br"
+                           class="w-full px-4 py-2.5 rounded-xl border {% if erros.email %}border-red-500 bg-red-50/30{% else %}border-slate-300{% endif %} focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition-colors">
+                    {% if erros.email %}
+                    <p class="text-xs text-red-600 mt-1 font-medium">{{ erros.email }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Telefone / WhatsApp -->
+                <div>
+                    <label for="telefone" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                        Telefone / WhatsApp com DDD
+                    </label>
+                    <input type="text" id="telefone" name="telefone" maxlength="30"
+                           value="{{ form.telefone|default('', true) }}"
+                           placeholder="(34) 99999-0000"
+                           class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition-colors">
+                    {% if erros.telefone %}
+                    <p class="text-xs text-red-600 mt-1 font-medium">{{ erros.telefone }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Formato da Palestra -->
+                <div>
+                    <label for="formato" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                        Formato Pretendido <span class="text-red-500">*</span>
+                    </label>
+                    <select id="formato" name="formato" required
+                            class="w-full px-4 py-2.5 rounded-xl border {% if erros.formato %}border-red-500 bg-red-50/30{% else %}border-slate-300{% endif %} focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition-colors bg-white">
+                        <option value="PRESENCIAL" {% if form.formato == 'PRESENCIAL' or not form.formato %}selected{% endif %}>Presencial</option>
+                        <option value="ONLINE" {% if form.formato == 'ONLINE' %}selected{% endif %}>Online (Transmissão ao Vivo)</option>
+                    </select>
+                    {% if erros.formato %}
+                    <p class="text-xs text-red-600 mt-1 font-medium">{{ erros.formato }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção 2: Local e Datas do Evento -->
+        <div>
+            <div class="border-b border-slate-200 pb-3 mb-6">
+                <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                    <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center justify-center">2</span>
+                    Localização e Datas Pretendidas
+                </h2>
+                <p class="text-xs text-slate-500 mt-1">
+                    Janela mínima de antecedência: a partir de {{ min_data_str }} (mínimo 7 dias de antecedência - RN-02).
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <!-- Cidade -->
+                <div>
+                    <label for="cidade" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                        Cidade <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="cidade" name="cidade" required minlength="2" maxlength="100"
+                           value="{{ form.cidade|default('', true) }}"
+                           placeholder="Ex.: Uberlândia, São Paulo, Brasília"
+                           class="w-full px-4 py-2.5 rounded-xl border {% if erros.cidade %}border-red-500 bg-red-50/30{% else %}border-slate-300{% endif %} focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition-colors">
+                    {% if erros.cidade %}
+                    <p class="text-xs text-red-600 mt-1 font-medium">{{ erros.cidade }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Estado UF -->
+                <div>
+                    <label for="estado" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                        Estado (UF) <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="estado" name="estado" required minlength="2" maxlength="2"
+                           value="{{ form.estado|default('', true) }}"
+                           placeholder="Ex.: MG"
+                           class="w-full px-4 py-2.5 uppercase rounded-xl border {% if erros.estado %}border-red-500 bg-red-50/30{% else %}border-slate-300{% endif %} focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition-colors">
+                    {% if erros.estado %}
+                    <p class="text-xs text-red-600 mt-1 font-medium">{{ erros.estado }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Data Desejada -->
+                <div>
+                    <label for="data_desejada" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                        Data Desejada Principal <span class="text-red-500">*</span>
+                    </label>
+                    <input type="date" id="data_desejada" name="data_desejada" required min="{{ min_data_iso }}"
+                           value="{{ form.data_desejada|default('', true) }}"
+                           class="w-full px-4 py-2.5 rounded-xl border {% if erros.data_desejada %}border-red-500 bg-red-50/30{% else %}border-slate-300{% endif %} focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition-colors">
+                    {% if erros.data_desejada %}
+                    <p class="text-xs text-red-600 mt-1 font-medium">{{ erros.data_desejada }}</p>
+                    {% endif %}
+                    <span class="text-[11px] text-slate-400 block mt-1">A data só fica garantida após confirmação formal do Daniel.</span>
+                </div>
+
+                <!-- Data Alternativa -->
+                <div>
+                    <label for="data_alternativa" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                        Segunda Opção de Data (Opcional)
+                    </label>
+                    <input type="date" id="data_alternativa" name="data_alternativa" min="{{ min_data_iso }}"
+                           value="{{ form.data_alternativa|default('', true) }}"
+                           class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition-colors">
+                    {% if erros.data_alternativa %}
+                    <p class="text-xs text-red-600 mt-1 font-medium">{{ erros.data_alternativa }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção 3: Detalhes do Público e Tema -->
+        <div>
+            <div class="border-b border-slate-200 pb-3 mb-6">
+                <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                    <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center justify-center">3</span>
+                    Tema e Perfil do Público
+                </h2>
+                <p class="text-xs text-slate-500 mt-1">Informações pedagógicas para calibrar a palestra.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <!-- Tema Escolhido -->
+                <div class="sm:col-span-2">
+                    <label for="tema_id" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                        Tema de Interesse no Catálogo
+                    </label>
+                    <select id="tema_id" name="tema_id"
+                            class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition-colors bg-white">
+                        <option value="">— Tema Aberto / Definir em conjunto com o Daniel —</option>
+                        {% for t in temas %}
+                        <option value="{{ t.id }}" {% if tema_selecionado_id == t.id or form.tema_id|string == t.id|string %}selected{% endif %}>
+                            {{ t.titulo }} ({{ t.duracao_minutos }} min)
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Perfil do Público -->
+                <div>
+                    <label for="perfil_publico" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                        Perfil do Público <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="perfil_publico" name="perfil_publico" required maxlength="200"
+                           value="{{ form.perfil_publico|default('', true) }}"
+                           placeholder="Ex.: Funcionários operacionais, gestores, estudantes de graduação"
+                           class="w-full px-4 py-2.5 rounded-xl border {% if erros.perfil_publico %}border-red-500 bg-red-50/30{% else %}border-slate-300{% endif %} focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition-colors">
+                    {% if erros.perfil_publico %}
+                    <p class="text-xs text-red-600 mt-1 font-medium">{{ erros.perfil_publico }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Público Estimado -->
+                <div>
+                    <label for="publico_estimado" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                        Público Estimado (Quantidade de Pessoas)
+                    </label>
+                    <input type="number" id="publico_estimado" name="publico_estimado" min="1" max="100000"
+                           value="{{ form.publico_estimado|default('', true) }}"
+                           placeholder="Ex.: 80"
+                           class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition-colors">
+                    {% if erros.publico_estimado %}
+                    <p class="text-xs text-red-600 mt-1 font-medium">{{ erros.publico_estimado }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Mensagem Adicional -->
+                <div class="sm:col-span-2">
+                    <label for="mensagem" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                        Mensagem ou Necessidades Específicas (Opcional)
+                    </label>
+                    <textarea id="mensagem" name="mensagem" rows="3" maxlength="2000"
+                              placeholder="Conte um pouco sobre o evento, tema da convenção ou expectativas principais..."
+                              class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition-colors">{{ form.mensagem|default('', true) }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Termo de Consentimento LGPD (RN-01, P-08) -->
+        <div class="bg-slate-50 rounded-2xl p-5 border {% if erros.consentimento %}border-red-400 bg-red-50/30{% else %}border-slate-200{% endif %}">
+            <div class="flex items-start gap-3">
+                <input type="checkbox" id="consentimento" name="consentimento" value="true" required
+                       {% if form.consentimento %}checked{% endif %}
+                       class="w-5 h-5 mt-0.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer">
+                <label for="consentimento" class="text-xs text-slate-600 leading-relaxed cursor-pointer">
+                    <strong class="text-slate-900 block mb-0.5">Termo de Consentimento e Privacidade (LGPD) <span class="text-red-500">*</span></strong>
+                    Concordo que os dados informados sejam utilizados exclusivamente pelo palestrante Daniel Takeo Aihara para responder a esta solicitação de palestra. Os dados não serão compartilhados com terceiros e serão mantidos em conformidade com a LGPD.
+                </label>
+            </div>
+            {% if erros.consentimento %}
+            <p class="text-xs text-red-600 mt-2 font-medium">{{ erros.consentimento }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Botão de Envio -->
+        <div class="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <span class="text-xs text-slate-400 text-center sm:text-left">
+                Campos marcados com <span class="text-red-500 font-bold">*</span> são de preenchimento obrigatório.
+            </span>
+            <button type="submit" class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 text-base font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md hover:shadow-lg transition-all">
+                Enviar Solicitação de Palestra &rarr;
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

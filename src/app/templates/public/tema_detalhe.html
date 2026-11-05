@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}{{ tema.titulo }} — Daniel Takeo Aihara{% endblock %}
+
+{% block content %}
+<div class="bg-slate-900 text-white py-12 sm:py-16 border-b border-slate-800">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <a href="/temas" class="inline-flex items-center gap-1 text-xs font-semibold text-emerald-400 hover:text-emerald-300 mb-4 transition-colors">
+            &larr; Voltar para todas as palestras
+        </a>
+        <div class="flex items-center gap-2 flex-wrap mb-3">
+            <span class="inline-flex items-center text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                {{ tema.formatos }}
+            </span>
+            <span class="text-xs text-slate-400">
+                ⏱ {{ tema.duracao_minutos }} minutos
+            </span>
+        </div>
+        <h1 class="text-2xl sm:text-4xl font-extrabold leading-tight">{{ tema.titulo }}</h1>
+        {% if tema.subtitulo %}
+        <p class="text-slate-300 text-sm sm:text-base mt-2 font-medium">
+            {{ tema.subtitulo }}
+        </p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        <!-- Conteúdo Detalhado -->
+        <div class="lg:col-span-2 space-y-8">
+            <div class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200/90 shadow-sm space-y-6">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900 mb-2">Visão Geral da Palestra</h2>
+                    <p class="text-sm text-slate-600 leading-relaxed">
+                        {{ tema.descricao_curta }}
+                    </p>
+                </div>
+
+                <div class="border-t border-slate-100 pt-6">
+                    <h3 class="text-base font-bold text-slate-900 mb-3">Objetivos e Abordagem</h3>
+                    <div class="text-sm text-slate-700 leading-relaxed whitespace-pre-line">
+                        {{ tema.descricao_completa }}
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-100 pt-6">
+                    <h3 class="text-base font-bold text-slate-900 mb-3">Público-Alvo Recomendado</h3>
+                    <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 text-sm text-slate-700">
+                        {{ tema.publico_alvo }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coluna Lateral com CTA (RF-04) -->
+        <div class="lg:col-span-1">
+            <div class="sticky top-28 bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-6">
+                <div>
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Interesse nesta palestra?</span>
+                    <h3 class="text-lg font-bold text-slate-900">Agende para o seu evento</h3>
+                </div>
+
+                <div class="space-y-3 text-xs text-slate-600">
+                    <div class="flex items-center justify-between py-2 border-b border-slate-100">
+                        <span class="text-slate-500">Duração:</span>
+                        <strong class="text-slate-900">{{ tema.duracao_minutos }} min</strong>
+                    </div>
+                    <div class="flex items-center justify-between py-2 border-b border-slate-100">
+                        <span class="text-slate-500">Modalidade:</span>
+                        <strong class="text-slate-900">{{ tema.formatos }}</strong>
+                    </div>
+                    <div class="flex items-center justify-between py-2 border-b border-slate-100">
+                        <span class="text-slate-500">Retorno:</span>
+                        <strong class="text-emerald-700">Até 48h úteis</strong>
+                    </div>
+                </div>
+
+                <a href="/solicitar?tema={{ tema.id }}" class="w-full inline-flex items-center justify-center px-6 py-3.5 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md transition-all text-center">
+                    Solicitar Esta Palestra &rarr;
+                </a>
+
+                <p class="text-[11px] text-slate-400 text-center leading-tight">
+                    Ao clicar, o formulário abrirá com este tema já selecionado para facilitar seu pedido.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

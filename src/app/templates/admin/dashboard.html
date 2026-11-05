@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+
+{% block title %}Painel de Solicitações — Daniel Takeo Aihara{% endblock %}
+
+{% block content %}
+<!-- Barra de Cabeçalho do Painel -->
+<div class="bg-slate-900 text-white border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">Painel Administrativo</span>
+                <h1 class="text-2xl sm:text-3xl font-extrabold mt-1">Gestão de Solicitações de Palestras</h1>
+                <p class="text-xs sm:text-sm text-slate-400">Logado como: <strong>{{ admin.nome }}</strong> ({{ admin.email }})</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <a href="/admin/logout" class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    Sair
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+    <!-- Mensagens de Sucesso ou Alerta -->
+    {% if msg_sucesso %}
+    <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-sm flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <span class="font-bold text-emerald-700">✓</span>
+            <span>{{ msg_sucesso }}</span>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Contadores do Funil (RF-15) -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 sm:gap-4">
+        <!-- Abertas -->
+        <a href="/admin?status=ABERTAS" class="p-4 rounded-2xl bg-white border {% if status_ativo == 'ABERTAS' %}border-emerald-500 ring-2 ring-emerald-500/20{% else %}border-slate-200{% endif %} hover:border-slate-300 transition-all shadow-sm">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">Abertas (Ativas)</span>
+            <span class="text-2xl font-black text-slate-900 mt-1 block">{{ totais.ABERTAS }}</span>
+        </a>
+
+        <!-- Nova -->
+        <a href="/admin?status=NOVA" class="p-4 rounded-2xl bg-white border {% if status_ativo == 'NOVA' %}border-blue-500 ring-2 ring-blue-500/20{% else %}border-slate-200{% endif %} hover:border-slate-300 transition-all shadow-sm">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-blue-600 block">Novas</span>
+            <span class="text-2xl font-black text-blue-700 mt-1 block">{{ totais.NOVA }}</span>
+        </a>
+
+        <!-- Em Análise -->
+        <a href="/admin?status=EM_ANALISE" class="p-4 rounded-2xl bg-white border {% if status_ativo == 'EM_ANALISE' %}border-amber-500 ring-2 ring-amber-500/20{% else %}border-slate-200{% endif %} hover:border-slate-300 transition-all shadow-sm">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-amber-600 block">Em Análise</span>
+            <span class="text-2xl font-black text-amber-700 mt-1 block">{{ totais.EM_ANALISE }}</span>
+        </a>
+
+        <!-- Proposta Enviada -->
+        <a href="/admin?status=PROPOSTA_ENVIADA" class="p-4 rounded-2xl bg-white border {% if status_ativo == 'PROPOSTA_ENVIADA' %}border-indigo-500 ring-2 ring-indigo-500/20{% else %}border-slate-200{% endif %} hover:border-slate-300 transition-all shadow-sm">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-600 block">Proposta</span>
+            <span class="text-2xl font-black text-indigo-700 mt-1 block">{{ totais.PROPOSTA_ENVIADA }}</span>
+        </a>
+
+        <!-- Confirmada -->
+        <a href="/admin?status=CONFIRMADA" class="p-4 rounded-2xl bg-white border {% if status_ativo == 'CONFIRMADA' %}border-emerald-500 ring-2 ring-emerald-500/20{% else %}border-slate-200{% endif %} hover:border-slate-300 transition-all shadow-sm">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-600 block">Confirmadas</span>
+            <span class="text-2xl font-black text-emerald-700 mt-1 block">{{ totais.CONFIRMADA }}</span>
+        </a>
+
+        <!-- Realizada -->
+        <a href="/admin?status=REALIZADA" class="p-4 rounded-2xl bg-white border {% if status_ativo == 'REALIZADA' %}border-slate-500 ring-2 ring-slate-500/20{% else %}border-slate-200{% endif %} hover:border-slate-300 transition-all shadow-sm">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">Realizadas</span>
+            <span class="text-2xl font-black text-slate-700 mt-1 block">{{ totais.REALIZADA }}</span>
+        </a>
+
+        <!-- Recusadas / Canceladas -->
+        <a href="/admin?status=RECUSADA" class="p-4 rounded-2xl bg-white border {% if status_ativo == 'RECUSADA' or status_ativo == 'CANCELADA' %}border-red-500 ring-2 ring-red-500/20{% else %}border-slate-200{% endif %} hover:border-slate-300 transition-all shadow-sm">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-red-600 block">Encerradas</span>
+            <span class="text-2xl font-black text-red-700 mt-1 block">{{ totais.RECUSADA + totais.CANCELADA }}</span>
+        </a>
+    </div>
+
+    <!-- Barra de Filtros e Busca (RF-15, RF-21) -->
+    <div class="bg-white rounded-2xl p-4 sm:p-6 border border-slate-200/90 shadow-sm">
+        <form method="GET" action="/admin" class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
+            <!-- Campo de Busca -->
+            <div class="sm:col-span-5">
+                <label for="busca" class="sr-only">Buscar</label>
+                <div class="relative">
+                    <input type="text" id="busca" name="busca" value="{{ busca|default('', true) }}"
+                           placeholder="Buscar por protocolo, empresa, contato, e-mail..."
+                           class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-xs sm:text-sm">
+                    <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Filtro de Status -->
+            <div class="sm:col-span-4">
+                <select name="status" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-xs sm:text-sm bg-white">
+                    <option value="ABERTAS" {% if status_ativo == 'ABERTAS' %}selected{% endif %}>Filtro: Todas Abertas (Padrão)</option>
+                    <option value="TODAS" {% if status_ativo == 'TODAS' %}selected{% endif %}>Filtro: Todas as Solicitações</option>
+                    <option value="NOVA" {% if status_ativo == 'NOVA' %}selected{% endif %}>Filtro: Apenas Novas</option>
+                    <option value="EM_ANALISE" {% if status_ativo == 'EM_ANALISE' %}selected{% endif %}>Filtro: Em Análise</option>
+                    <option value="PROPOSTA_ENVIADA" {% if status_ativo == 'PROPOSTA_ENVIADA' %}selected{% endif %}>Filtro: Proposta Enviada</option>
+                    <option value="CONFIRMADA" {% if status_ativo == 'CONFIRMADA' %}selected{% endif %}>Filtro: Confirmadas</option>
+                    <option value="REALIZADA" {% if status_ativo == 'REALIZADA' %}selected{% endif %}>Filtro: Realizadas</option>
+                    <option value="RECUSADA" {% if status_ativo == 'RECUSADA' %}selected{% endif %}>Filtro: Recusadas</option>
+                    <option value="CANCELADA" {% if status_ativo == 'CANCELADA' %}selected{% endif %}>Filtro: Canceladas</option>
+                </select>
+            </div>
+
+            <!-- Ordenação -->
+            <div class="sm:col-span-3 flex items-center gap-2">
+                <select name="ordem" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-xs sm:text-sm bg-white">
+                    <option value="criado_em_desc" {% if ordem == 'criado_em_desc' %}selected{% endif %}>Mais recentes</option>
+                    <option value="data_desejada_asc" {% if ordem == 'data_desejada_asc' %}selected{% endif %}>Data desejada (próximas)</option>
+                    <option value="criado_em_asc" {% if ordem == 'criado_em_asc' %}selected{% endif %}>Mais antigas</option>
+                </select>
+                <button type="submit" class="px-4 py-2.5 text-xs font-bold text-white bg-slate-800 hover:bg-slate-900 rounded-xl transition-colors">
+                    Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tabela / Cards de Solicitações -->
+    <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden">
+        <div class="p-4 sm:p-6 border-b border-slate-100 flex items-center justify-between">
+            <h2 class="text-base font-bold text-slate-900">
+                Solicitações Encontradas 
+                <span class="text-xs font-normal text-slate-500">({{ solicitacoes|length }} registros)</span>
+            </h2>
+        </div>
+
+        {% if solicitacoes|length == 0 %}
+        <div class="p-12 text-center space-y-3">
+            <div class="w-12 h-12 mx-auto rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                📋
+            </div>
+            <h3 class="text-sm font-bold text-slate-800">Nenhuma solicitação encontrada</h3>
+            <p class="text-xs text-slate-500 max-w-sm mx-auto">
+                Não há registros com os filtros atuais selecionados. Tente alterar o status ou limpar o termo de busca.
+            </p>
+            <div class="pt-2">
+                <a href="/admin?status=TODAS" class="text-xs font-semibold text-emerald-600 hover:text-emerald-700">
+                    Ver todas as solicitações &rarr;
+                </a>
+            </div>
+        </div>
+        {% else %}
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                        <th class="py-3.5 px-4 sm:px-6">Protocolo</th>
+                        <th class="py-3.5 px-4">Organização / Contato</th>
+                        <th class="py-3.5 px-4">Data Desejada</th>
+                        <th class="py-3.5 px-4">Local</th>
+                        <th class="py-3.5 px-4">Status</th>
+                        <th class="py-3.5 px-4 text-right">Ação</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs sm:text-sm">
+                    {% for s in solicitacoes %}
+                    <tr class="hover:bg-slate-50/60 transition-colors">
+                        <!-- Protocolo -->
+                        <td class="py-4 px-4 sm:px-6 font-mono font-bold text-emerald-800">
+                            {{ s.protocolo }}
+                            <span class="block text-[10px] text-slate-400 font-sans font-normal">
+                                {{ s.criado_em.strftime('%d/%m/%Y %H:%M') }}
+                            </span>
+                        </td>
+
+                        <!-- Organização / Contato -->
+                        <td class="py-4 px-4">
+                            <strong class="text-slate-900 block font-semibold">{{ s.organizacao }}</strong>
+                            <span class="text-slate-500 text-xs">{{ s.nome_contato }} &bull; {{ s.email }}</span>
+                            {% if s.tema_titulo %}
+                            <span class="block text-[11px] text-slate-600 mt-0.5 truncate max-w-xs">Tema: {{ s.tema_titulo }}</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Data Desejada -->
+                        <td class="py-4 px-4 whitespace-nowrap">
+                            <strong class="text-slate-900 block">{{ s.data_desejada.strftime('%d/%m/%Y') }}</strong>
+                            <span class="text-[11px] text-slate-500">{{ s.formato }}</span>
+                        </td>
+
+                        <!-- Local -->
+                        <td class="py-4 px-4 whitespace-nowrap text-slate-600">
+                            {{ s.cidade }}/{{ s.estado }}
+                        </td>
+
+                        <!-- Status Badge (Texto + Cor - RN-03) -->
+                        <td class="py-4 px-4 whitespace-nowrap">
+                            {% if s.status == 'NOVA' %}
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                                Nova
+                            </span>
+                            {% elif s.status == 'EM_ANALISE' %}
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                Em Análise
+                            </span>
+                            {% elif s.status == 'PROPOSTA_ENVIADA' %}
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                                Proposta Enviada
+                            </span>
+                            {% elif s.status == 'CONFIRMADA' %}
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                Confirmada
+                            </span>
+                            {% elif s.status == 'REALIZADA' %}
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-300">
+                                <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
+                                Realizada
+                            </span>
+                            {% elif s.status == 'RECUSADA' %}
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                                Recusada
+                            </span>
+                            {% elif s.status == 'CANCELADA' %}
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                Cancelada
+                            </span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Ação -->
+                        <td class="py-4 px-4 sm:px-6 text-right whitespace-nowrap">
+                            <a href="/admin/solicitacoes/{{ s.id }}" class="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg transition-colors">
+                                Detalhes & Funil &rarr;
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+
+{% block title %}Solicitação {{ solicitacao.protocolo }} — Painel do Daniel{% endblock %}
+
+{% block content %}
+<!-- Cabeçalho -->
+<div class="bg-slate-900 text-white border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <a href="/admin" class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-400 hover:text-emerald-300 mb-3 transition-colors">
+            &larr; Voltar para a lista de solicitações
+        </a>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="flex items-center gap-4 flex-wrap">
+                <span class="text-2xl sm:text-3xl font-mono font-black tracking-wider text-emerald-400">
+                    {{ solicitacao.protocolo }}
+                </span>
+
+                <!-- Status Badge -->
+                {% if solicitacao.status == 'NOVA' %}
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                    <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+                    Nova Solicitação
+                </span>
+                {% elif solicitacao.status == 'EM_ANALISE' %}
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                    Em Análise
+                </span>
+                {% elif solicitacao.status == 'PROPOSTA_ENVIADA' %}
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                    <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+                    Proposta Enviada
+                </span>
+                {% elif solicitacao.status == 'CONFIRMADA' %}
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    Confirmada na Agenda
+                </span>
+                {% elif solicitacao.status == 'REALIZADA' %}
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-700 text-slate-300 border border-slate-600">
+                    <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+                    Palestra Realizada
+                </span>
+                {% elif solicitacao.status == 'RECUSADA' %}
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-500/20 text-red-300 border border-red-500/30">
+                    <span class="w-2 h-2 rounded-full bg-red-400"></span>
+                    Recusada
+                </span>
+                {% elif solicitacao.status == 'CANCELADA' %}
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                    <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+                    Cancelada
+                </span>
+                {% endif %}
+            </div>
+
+            <div class="text-xs text-slate-400">
+                Criada em: <strong>{{ solicitacao.criado_em.strftime('%d/%m/%Y às %H:%M') }}</strong> &bull; Versão: <strong>v{{ solicitacao.versao }}</strong>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+    <!-- Mensagens de Erro ou Alerta -->
+    {% if erro %}
+    <div class="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-800 text-sm flex items-start gap-3">
+        <span class="font-bold text-red-600">⚠</span>
+        <div>{{ erro }}</div>
+    </div>
+    {% endif %}
+
+    {% if msg_sucesso %}
+    <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-sm flex items-start gap-3">
+        <span class="font-bold text-emerald-600">✓</span>
+        <div>{{ msg_sucesso }}</div>
+    </div>
+    {% endif %}
+
+    <!-- Barra de Ações Permitidas da Máquina de Estados (RN-03, RF-17) -->
+    <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+            <div>
+                <h2 class="text-sm font-bold uppercase tracking-wider text-slate-700">Ações do Funil de Status</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Transições permitidas para o status atual <strong>{{ solicitacao.status }}</strong>.</p>
+            </div>
+        </div>
+
+        {% if acoes|length == 0 %}
+        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-500">
+            Esta solicitação está em um estado final definitivo (<strong>{{ solicitacao.status }}</strong>) e não permite novas transições de status.
+        </div>
+        {% else %}
+        <div class="flex items-center gap-3 flex-wrap pt-2">
+            {% for acao in acoes %}
+                {% if acao.desabilitada %}
+                <button type="button" disabled title="{{ acao.msg_desabilitada }}"
+                        class="px-5 py-2.5 rounded-xl text-xs font-bold bg-slate-200 text-slate-400 cursor-not-allowed">
+                    {{ acao.rotulo }} (Aguardando Data)
+                </button>
+                {% elif acao.exige_motivo %}
+                <!-- Botão que abre modal para informar motivo (RN-09) -->
+                <button type="button" onclick="abrirModalMotivo('{{ acao.acao }}', '{{ acao.rotulo }}', '{{ acao.descricao }}')"
+                        class="px-5 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all {{ acao.estilo }}">
+                    {{ acao.rotulo }}...
+                </button>
+                {% else %}
+                <!-- Formulário direto para transição simples -->
+                <form method="POST" action="/admin/solicitacoes/{{ solicitacao.id }}/acao" class="inline">
+                    <input type="hidden" name="versao" value="{{ solicitacao.versao }}">
+                    <input type="hidden" name="acao" value="{{ acao.acao }}">
+                    <button type="submit" class="px-5 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all {{ acao.estilo }}">
+                        {{ acao.rotulo }}
+                    </button>
+                </form>
+                {% endif %}
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Grid de Informações -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Coluna 1 & 2: Detalhes Completos da Solicitação (RF-16) -->
+        <div class="lg:col-span-2 space-y-6">
+            <div class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
+                <div>
+                    <h2 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-3 mb-4">
+                        Dados do Contratante e Responsável
+                    </h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
+                        <div>
+                            <span class="text-slate-400 text-xs block">Organização / Instituição:</span>
+                            <strong class="text-slate-900 text-base">{{ solicitacao.organizacao }}</strong>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 text-xs block">Pessoa de Contato:</span>
+                            <strong class="text-slate-900">{{ solicitacao.nome_contato }}</strong>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 text-xs block">E-mail:</span>
+                            <a href="mailto:{{ solicitacao.email }}" class="text-emerald-700 hover:underline font-medium">
+                                {{ solicitacao.email }}
+                            </a>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 text-xs block">Telefone / WhatsApp:</span>
+                            {% if solicitacao.telefone %}
+                            <a href="https://wa.me/55{{ solicitacao.telefone|replace('(', '')|replace(')', '')|replace('-', '')|replace(' ', '') }}" target="_blank" class="text-emerald-700 hover:underline font-medium inline-flex items-center gap-1">
+                                💬 {{ solicitacao.telefone }}
+                            </a>
+                            {% else %}
+                            <span class="text-slate-400">Não informado</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h2 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-3 mb-4">
+                        Detalhes do Evento Pretendido
+                    </h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
+                        <div>
+                            <span class="text-slate-400 text-xs block">Data Desejada Principal:</span>
+                            <strong class="text-emerald-800 text-base font-bold">
+                                {{ solicitacao.data_desejada.strftime('%d/%m/%Y') }}
+                            </strong>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 text-xs block">Data Alternativa (2ª opção):</span>
+                            {% if solicitacao.data_alternativa %}
+                            <strong class="text-slate-800">{{ solicitacao.data_alternativa.strftime('%d/%m/%Y') }}</strong>
+                            {% else %}
+                            <span class="text-slate-400">Nenhuma data alternativa</span>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <span class="text-slate-400 text-xs block">Local do Evento:</span>
+                            <strong class="text-slate-800">{{ solicitacao.cidade }}/{{ solicitacao.estado }}</strong>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 text-xs block">Formato:</span>
+                            <strong class="text-slate-800">{{ solicitacao.formato }}</strong>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 text-xs block">Perfil do Público:</span>
+                            <strong class="text-slate-800">{{ solicitacao.perfil_publico }}</strong>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 text-xs block">Público Estimado:</span>
+                            <strong class="text-slate-800">{{ solicitacao.publico_estimado or 'Não estimado' }} participantes</strong>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <span class="text-slate-400 text-xs block">Tema Selecionado no Catálogo:</span>
+                            <strong class="text-slate-900 text-base">
+                                {{ solicitacao.tema_titulo or 'Tema Aberto / A Definir' }}
+                            </strong>
+                        </div>
+                    </div>
+                </div>
+
+                {% if solicitacao.mensagem %}
+                <div>
+                    <h2 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-3 mb-3">
+                        Mensagem / Observações do Contratante
+                    </h2>
+                    <div class="p-4 bg-slate-50 rounded-xl text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line border border-slate-100">
+                        {{ solicitacao.mensagem }}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Coluna 3: Histórico e Linha do Tempo Auditável (US-09 / RF-19 / RN-12) -->
+        <div class="lg:col-span-1 space-y-6">
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-6">
+                <div>
+                    <h2 class="text-base font-bold text-slate-900">Histórico de Alterações</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">Registro auditável imutável de transições (RN-12).</p>
+                </div>
+
+                <div class="flow-root">
+                    <ul class="-mb-8 space-y-6">
+                        {% for ev in solicitacao.historico %}
+                        <li class="relative pb-6 border-l-2 border-emerald-500/30 pl-4 ml-2">
+                            <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-emerald-600 border-2 border-white"></div>
+                            <div class="space-y-1">
+                                <div class="flex items-center justify-between text-[11px] text-slate-400">
+                                    <span>{{ ev.criado_em.strftime('%d/%m/%Y %H:%M') }}</span>
+                                    <span class="font-bold text-slate-600 uppercase">{{ ev.autor }}</span>
+                                </div>
+                                <div class="text-xs font-bold text-slate-800">
+                                    {{ ev.acao }}: 
+                                    {% if ev.status_anterior %}
+                                    <span class="text-slate-500 line-through">{{ ev.status_anterior }}</span> &rarr;
+                                    {% endif %}
+                                    <span class="text-emerald-700">{{ ev.status_novo }}</span>
+                                </div>
+                                {% if ev.motivo %}
+                                <div class="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-100 mt-1 italic">
+                                    "{{ ev.motivo }}"
+                                </div>
+                                {% endif %}
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Ações que Exigem Motivo (RN-09) -->
+<div id="modalMotivo" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-100">
+        <div>
+            <h3 id="modalTitulo" class="text-lg font-bold text-slate-900">Confirmar Ação</h3>
+            <p id="modalDescricao" class="text-xs text-slate-500 mt-1">Esta ação exige o registro do motivo no histórico.</p>
+        </div>
+
+        <form method="POST" action="/admin/solicitacoes/{{ solicitacao.id }}/acao" class="space-y-4">
+            <input type="hidden" name="versao" value="{{ solicitacao.versao }}">
+            <input type="hidden" name="acao" id="modalInputAcao" value="">
+
+            <div>
+                <label for="motivo" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Motivo / Justificativa <span class="text-red-500">*</span>
+                </label>
+                <textarea id="motivo" name="motivo" required minlength="3" maxlength="300" rows="3"
+                          placeholder="Informe o motivo para registro imutável no histórico..."
+                          class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"></textarea>
+                <span class="text-[11px] text-slate-400 block mt-1">Mínimo de 3 e máximo de 300 caracteres (RN-09).</span>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-2">
+                <button type="button" onclick="fecharModalMotivo()"
+                        class="px-5 py-2.5 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors">
+                    Cancelar
+                </button>
+                <button type="submit" id="modalBtnConfirmar"
+                        class="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-700 shadow-sm transition-colors">
+                    Confirmar Transição
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function abrirModalMotivo(acao, rotulo, descricao) {
+        document.getElementById('modalInputAcao').value = acao;
+        document.getElementById('modalTitulo').innerText = rotulo;
+        document.getElementById('modalDescricao').innerText = descricao;
+        document.getElementById('modalMotivo').classList.remove('hidden');
+        document.getElementById('motivo').focus();
+    }
+
+    function fecharModalMotivo() {
+        document.getElementById('modalMotivo').classList.add('hidden');
+    }
+</script>
+{% endblock %}
